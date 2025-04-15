@@ -75,6 +75,8 @@ export default function App() {
       }} disabled={ loading }>
         <option value="" default>-- Sélectionnez votre choix --</option>
         <option value="exemple.js">exemple.js</option>
+        <option value="pow.js">pow.js</option>
+
       </select>
 
       <MiddlewareList middlewares={middlewares} setMiddlewares={setMiddlewares} />
