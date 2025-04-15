@@ -1,39 +1,60 @@
-import React, { useState, useRef } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import ApiForm from './components/ApiForm'
 import MiddlewareList from './components/MiddlewareList'
 import StatsDisplay from './components/StatsDisplay'
 import { runLoadTest } from './services/requestEngine'
 import { middlewareMap } from './middlewares'
 import './App.css'
+import ResponseDisplay from './components/ResponseDisplay'
 
 export default function App() {
   const [middlewares, setMiddlewares] = useState([])
+  const [responses, setResponses] = useState(null)
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(false)
   const [elapsed, setElapsed] = useState(0)
   const timerRef = useRef(null)
 
-  const handleStartTest = async ({ verbe, url, count, delay }) => {
+  useEffect(() => {
+    // Si un test est lancé, démarre le timer
+    if (loading) {
+      timerRef.current = setInterval(() => {
+        setElapsed(prevElapsed => prevElapsed + 1)
+      }, 1000)
+    }
+
+    // Si le test est terminé, nettoie l'intervalle
+    return () => clearInterval(timerRef.current)
+  }, [loading])
+
+  const handleStartTest = async ({ verbe, url, count, delay, salveSize, body }) => {
+    setResponses(null)
     setStats(null)
     setElapsed(0)
     setLoading(true)
 
-    // start timer
-    timerRef.current = setInterval(() => {
-      setElapsed(prev => prev + 1)
-    }, 1000)
+    if (verbe === 'put' || verbe === 'post' || verbe === 'patch') {
+      try {
+        JSON.parse(body)
+      } catch (error) {
+        alert('Le corps de la requête n\'est pas un JSON valide.' + error)
+        setLoading(false)
+        return
+      }
+    }
 
-    const result = await runLoadTest(verbe, url, count, delay, middlewares)
+    const result = await runLoadTest(verbe, url, count, delay, salveSize, body, middlewares)
 
     clearInterval(timerRef.current)
     setLoading(false)
-    setStats(result)
+    setStats(result.stats)
+    setResponses(result.responses)
   }
 
   const handleAddMiddleware = async (filename) => {
     if (middlewareMap[filename]) {
       const mod = await middlewareMap[filename]()
-      setMiddlewares(prev => [...prev, mod.default])
+      setMiddlewares(prev => [...prev, { id: Date.now(), fn: mod.default }])
     } else {
       console.warn('Middleware non trouvé :', filename)
     }
@@ -56,7 +77,7 @@ export default function App() {
         <option value="exemple.js">exemple.js</option>
       </select>
 
-      <MiddlewareList middlewares={middlewares} />
+      <MiddlewareList middlewares={middlewares} setMiddlewares={setMiddlewares} />
       
       {loading && (
         <div className="loader">
@@ -64,6 +85,8 @@ export default function App() {
           <p>⏱ Temps écoulé : {elapsed} s</p>
         </div>
       )}
+
+      {!loading && responses && <ResponseDisplay responses={responses} />}
 
       {!loading && stats && <StatsDisplay stats={stats} />}
     </div>

@@ -12,7 +12,9 @@ h1, h3 {
 
 form {
   display: flex;
+  flex-direction: column;
   justify-content: center;
+  align-items: center;
   gap: 1rem;
   margin: 1.5rem 0;
   flex-wrap: wrap;
@@ -41,6 +43,7 @@ div {
   max-width: 1000px;
   margin: 0 auto;
   padding: 1rem;
+  margin-bottom: 20px;
 }
 
 ul {
@@ -98,4 +101,9 @@ select:disabled {
   color: #888;
   cursor: not-allowed;
   border-color: #ddd;
+}
+
+#responses-container, #stats-container, #middlewares-container {
+  border: 1px solid #00000029;
+  border-radius: 6px;
 }
