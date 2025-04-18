@@ -6,6 +6,7 @@ import { runLoadTest } from './services/requestEngine'
 import { middlewareMap } from './middlewares'
 import './App.css'
 import ResponseDisplay from './components/ResponseDisplay'
+import MiddlewareLocalStoList from './components/MiddlewareLocalStoList'
 
 export default function App() {
   const [middlewares, setMiddlewares] = useState([])
@@ -13,18 +14,20 @@ export default function App() {
   const [stats, setStats] = useState(null)
   const [loading, setLoading] = useState(false)
   const [elapsed, setElapsed] = useState(0)
+  const [middlewaresLocalSto, setMiddlewaresLocalSto] = useState([])
   const timerRef = useRef(null)
 
   useEffect(() => {
-    // Si un test est lancé, démarre le timer
+
     if (loading) {
       timerRef.current = setInterval(() => {
         setElapsed(prevElapsed => prevElapsed + 1)
       }, 1000)
     }
 
-    // Si le test est terminé, nettoie l'intervalle
+
     return () => clearInterval(timerRef.current)
+
   }, [loading])
 
   const handleStartTest = async ({ verbe, url, count, delay, salveSize, body }) => {
@@ -62,8 +65,8 @@ export default function App() {
 
   return (
     <div>
-      <h1>Testeur de Résilience d’API</h1>
-      <ApiForm onStart={handleStartTest} loading={loading} />
+      <h1>Testeur d’API</h1>
+      <ApiForm onStart={handleStartTest} setMiddlewaresLocalSto={ setMiddlewaresLocalSto } middlewaresLocalSto={ middlewaresLocalSto } loading={loading} />
 
       {/* <button onClick={() => handleAddMiddleware('exemple.js')} disabled={ loading }>
         Ajouter Middleware d'exemple
@@ -80,6 +83,8 @@ export default function App() {
       </select>
 
       <MiddlewareList middlewares={middlewares} setMiddlewares={setMiddlewares} />
+
+      <MiddlewareLocalStoList setMiddlewaresLocalSto={ setMiddlewaresLocalSto } middlewaresLocalSto={ middlewaresLocalSto } />
       
       {loading && (
         <div className="loader">

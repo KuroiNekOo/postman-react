@@ -1,4 +1,4 @@
-import { applyMiddlewares } from './middlewareEngine'
+import { applyMiddlewares, runAllMiddlewares } from './middlewareEngine'
 import { calculateStats } from './stats'
 
 export const runLoadTest = async (verbe, url, count, delay, salveSize = 1, body, middlewares) => {
@@ -32,11 +32,20 @@ export const runLoadTest = async (verbe, url, count, delay, salveSize = 1, body,
         try {
           await applyMiddlewares(req, middlewares)
 
+          // Run les fonctions du localStorage
+          await runAllMiddlewares(req)
+
           start = performance.now()
           const res = await fetch(req.url, req.options)
           end = performance.now()
 
-          const json = await res?.json()
+          // Gestion du corps de la réponse seulement si c'est du json
+          let json = null
+          if (res.headers.get('content-type')?.includes('application/json')) {
+            json = await res.json()
+          } else {
+            json = await res.text()
+          }
 
           responses.push(json)
           results.push({ status: res.status, time: end - start })
